@@ -55,12 +55,26 @@ minikube service blog-town-svc --url
 
 ----
 
-## Rest Endpoints
-Method | Path | Auth? | Purpose
-POST | /create-user | ❌ | Register new user
-POST | /auth/login | ❌ | Login → access + refresh tokens
-POST | /auth/refresh | ❌ | Refresh access token
-POST | /blogs | ✅ | Create post
-GET | /blogs/search | ❌ | Public search (pagination, tag filter)
-POST | /blogs/{id}/save | ✅ | Bookmark post
-GET | /users/{uid}/saved | ✅ | List bookmarks
+## REST Endpoints
+
+| Method | Path               | Auth? | Purpose                                   |
+| ------ | ------------------ | ----- | ----------------------------------------- |
+| POST   | /create-user       | ❌    | Register new user                         |
+| POST   | /auth/login        | ❌    | Login → access + refresh tokens           |
+| POST   | /auth/refresh      | ❌    | Refresh access token                      |
+| POST   | /blogs             | ✅    | Create post                               |
+| GET    | /blogs/search      | ❌    | Public search (pagination, tag filter)    |
+| POST   | /blogs/{id}/save   | ✅    | Bookmark post                             |
+| GET    | /users/{uid}/saved | ✅    | List bookmarks                            |
+
+Full Swagger UI available at **`/openapi`**.
+
+---
+
+## Design Notes
+
+- **Stateless API** – only tokens are persisted (currently in-memory; easily swapped for DB/Redis).  
+- **Interface-backed layers** – swap mocks for real persistence without touching business logic.  
+- **Coroutines** – non-blocking I/O keeps threads free, enabling high concurrency.  
+- **CI/CD** – GitHub Actions pipeline builds, tests, and pushes the Docker image to GHCR.
+
