@@ -1,6 +1,5 @@
 package com.example.com.example.blogtown.services
 
-import ch.qos.logback.core.subst.Token
 import com.example.com.example.blogtown.config.JwtConfig
 import com.example.com.example.blogtown.domain.model.LoginRequest
 import com.example.com.example.blogtown.domain.model.TokenResponse
@@ -10,7 +9,7 @@ import com.example.com.example.blogtown.domain.repository.UserRepository
 import com.example.com.example.blogtown.domain.service.AuthService
 import io.ktor.server.auth.jwt.*
 import org.koin.core.component.KoinComponent
-import org.koin.core.componnet.inject
+import org.koin.core.component.inject
 import org.mindrot.jbcrypt.BCrypt
 
 class AuthServiceImpl(private val userRepository: UserRepository) : AuthService, KoinComponent {
@@ -42,7 +41,7 @@ class AuthServiceImpl(private val userRepository: UserRepository) : AuthService,
         } ?: throw IllegalArgumentException("Invalid credentials")
 
         // Verify Password with encryption
-        if (!BCrpyt.checkpw(request.passowrd, user.password)) {
+        if (!BCrypt.checkpw(request.password, user.password)) {
             throw IllegalArgumentException("Invalid credentials")
         }
 
