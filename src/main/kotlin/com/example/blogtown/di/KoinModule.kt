@@ -7,9 +7,9 @@ import com.example.com.example.blogtown.domain.repository.UserRepository
 import com.example.com.example.blogtown.domain.service.AuthService
 import com.example.com.example.blogtown.domain.service.BlogService
 import com.example.com.example.blogtown.domain.service.UserService
-import com.example.com.example.blogtown.persistence.repository.BlogRepositoryImpl
-import com.example.com.example.blogtown.persistence.repository.SavedBlogRepositoryImpl
-import com.example.com.example.blogtown.persistence.repository.UserRepositoryImpl
+import com.example.com.example.blogtown.infrastructure.persistence.repository.BlogRepositoryImpl
+import com.example.com.example.blogtown.infrastructure.persistence.repository.SavedBlogRepositoryImpl
+import com.example.com.example.blogtown.infrastructure.persistence.repository.UserRepositoryImpl
 import com.example.com.example.blogtown.services.AuthServiceImpl
 import com.example.com.example.blogtown.services.BlogServiceImpl
 import com.example.com.example.blogtown.services.UserServiceImpl
