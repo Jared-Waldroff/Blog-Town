@@ -1,6 +1,5 @@
 package com.example
 
-import com.example.com.example.blogtown.services.AuthServiceImpl
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
@@ -13,51 +12,22 @@ import org.slf4j.event.Level
 import com.example.com.example.blogtown.config.JwtConfig
 import com.example.com.example.blogtown.di.appModule
 import com.example.com.example.blogtown.domain.service.AuthService
+import com.example.com.example.blogtown.web.plugins.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import org.koin.ktor.plugin.Koin
 import org.koin.ktor.ext.inject
+import com.example.com.example.blogtown.web.routes.configureAuthRoutes
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
 fun Application.module() {
-    configureSecurity()
     configureSerialization()
     configureHTTP()
     configureMonitoring()
-    configureRouting()
 
-    // Logging setup
-    install(CallLogging) {
-        level = Level.INFO
-    }
-
-    // JSON Serialization
-    install(ContentNegotiation) {
-        json(Json {
-            prettyPrint = true
-            isLenient = true
-        })
-    }
-
-    // Error Handling
-    install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            call.respondText(
-                text = "500: ${cause.message}",
-                status = HttpStatusCode.InternalServerError
-            )
-        }
-    }
-
-    // Koin dependency injection
-    install(Koin) {
-        modules(appModule)
-    }
-
-    // Initialize JWT config
     val jwtConfig = JwtConfig(environment.config)
     val authService by inject<AuthService>()
 
@@ -71,4 +41,20 @@ fun Application.module() {
         }
     }
 
+    configureRouting()
+    configureAuthRoutes()
+
+
+    // JSON Serialization
+    install(ContentNegotiation) {
+        json(Json {
+            prettyPrint = true
+            isLenient = true
+        })
+    }
+
+    // Koin dependency injection
+    install(Koin) {
+        modules(appModule)
+    }
 }

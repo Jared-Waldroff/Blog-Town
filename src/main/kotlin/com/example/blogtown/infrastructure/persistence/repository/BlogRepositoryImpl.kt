@@ -1,4 +1,4 @@
-package com.example.com.example.blogtown.persistence.repository
+package com.example.com.example.blogtown.infrastructure.persistence.repository
 
 import com.example.com.example.blogtown.domain.model.Blog
 import com.example.com.example.blogtown.domain.repository.BlogRepository

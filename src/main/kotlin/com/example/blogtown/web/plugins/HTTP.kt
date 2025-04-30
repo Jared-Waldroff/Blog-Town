@@ -1,4 +1,4 @@
-package com.example
+package com.example.com.example.blogtown.web.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
@@ -24,10 +24,17 @@ import io.ktor.server.sessions.*
 import kotlinx.serialization.Serializable
 import org.slf4j.event.*
 
-fun Application.configureMonitoring() {
-    install(KHealth)
-    install(CallLogging) {
-        level = Level.INFO
-        filter { call -> call.request.path().startsWith("/") }
+fun Application.configureHTTP() {
+    install(CORS) {
+        allowMethod(HttpMethod.Options)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Patch)
+        allowHeader(HttpHeaders.Authorization)
+        allowHeader("MyCustomHeader")
+        anyHost() // Don't do this in production if possible. Try to limit it.
+    }
+    routing {
+        swaggerUI(path = "openapi")
     }
 }
