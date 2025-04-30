@@ -34,15 +34,15 @@ class AuthServiceImpl(private val userRepository: UserRepository) : AuthService,
 
     override suspend fun loginUser(request: LoginRequest): TokenResponse {
         // Find user by email or username
-        val user = if (request.email.isNotBlank()) {
-            userRepository.getUserByEmail(request.email)
-        } else {
-            userRepository.getUserByEmail(request.username)
-        } ?: throw IllegalArgumentException("Invalid credentials")
+        val user = when {
+            request.email.isNotBlank() -> userRepository.getUserByEmail(request.email)
+            request.username.isNotBlank() -> userRepository.getUserByUsername(request.username)
+            else -> null
+        } ?: throw IllegalArgumentException("Invalid username or password")
 
         // Verify Password with encryption
         if (!BCrypt.checkpw(request.password, user.password)) {
-            throw IllegalArgumentException("Invalid credentials")
+            throw IllegalArgumentException("Invalid username or password")
         }
 
         // Generate access and refresh tokens
