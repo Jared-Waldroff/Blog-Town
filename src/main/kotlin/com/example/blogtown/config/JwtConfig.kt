@@ -12,8 +12,8 @@ class JwtConfig(config: ApplicationConfig) {
     private val issuer: String = config.property("jwt.issuer").getString()
     private val audience: String = config.property("jwt.audience").getString()
 
-    val accessTokenExperiation: Long = config.property("jwt.accessTokenExperiation").getString().toLong()
-    val refreshTokenExpiration: Long = config.property("jwt.refreshTokenExpiration").getString().toLong()
+    private val accessTokenExpiration: Long = config.property("jwt.accessTokenExpiration").getString().toLong()
+    private val refreshTokenExpiration: Long = config.property("jwt.refreshTokenExpiration").getString().toLong()
 
     val realm: String = config.property("jwt.realm").getString()
 
@@ -30,7 +30,7 @@ class JwtConfig(config: ApplicationConfig) {
         .withIssuer(issuer)
         .withAudience(audience)
         .withClaim("userId", userId)
-        .withExpiresAt(Date(System.currentTimeMillis() + accessTokenExperiation))
+        .withExpiresAt(Date(System.currentTimeMillis() + accessTokenExpiration))
         .sign(algorithm)
 
     fun generateRefreshToken(userId: String): String = JWT.create()
