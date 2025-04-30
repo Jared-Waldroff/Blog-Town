@@ -9,4 +9,5 @@ interface UserRepository {
     suspend fun storeRefreshToken(userId: String, token: String)
     suspend fun validateRefreshToken(userId: String, token: String): Boolean
     suspend fun invalidateRefreshToken(userId: String)
+    suspend fun getUserByUsername(username: String): User?
 }
