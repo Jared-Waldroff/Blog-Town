@@ -6,8 +6,10 @@ import com.example.com.example.blogtown.domain.repository.UserRepository
 class UserRepositoryImpl : UserRepository {
     private val users = mutableMapOf<String, User>()
     private val usersByEmail = mutableMapOf<String, User>()
-    private val refreshTokens = mutableMapOf<String, String>()
     private val usersByUsername = mutableMapOf<String, User>()
+    private val usersByOAuth = mutableMapOf<Pair<String, String>, User>()
+    private val refreshTokens = mutableMapOf<String, String>()
+
 
     override suspend fun createUser(user: User): User {
         users[user.id] = user
@@ -38,5 +40,9 @@ class UserRepositoryImpl : UserRepository {
 
     override suspend fun validateRefreshToken(userId: String, token: String): Boolean {
         return refreshTokens[userId] == token
+    }
+
+    override suspend fun getUserByOAuth(provider: String, oauthId: String): User? {
+        return usersByOAuth[Pair(provider, oauthId)]
     }
 }

@@ -9,7 +9,9 @@ data class User(
     val email: String,
     val username: String,
     val password: String,
-    val timeCreated: Long = System.currentTimeMillis()
+    val timeCreated: Long = System.currentTimeMillis(),
+    val oauthProvider: String,
+    val oauthId: String
 )
 
 @Serializable
@@ -22,14 +24,15 @@ data class UserCreationRequest(
 @Serializable
 data class TokenResponse(
     val accessToken: String,
-    val refreshToken: String
+    val refreshToken: String,
+    val expiresIn: Long
 )
 
 @Serializable
 data class LoginRequest(
-    val username: String,
-    val email: String,
-    val password: String
+    val username: String = "",
+    val email: String = "",
+    val password: String = ""
 )
 
 @Serializable
