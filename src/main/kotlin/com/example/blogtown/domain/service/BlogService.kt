@@ -7,4 +7,5 @@ interface BlogService {
     suspend fun searchBlogs(request: BlogSearchRequest): List<BlogSearchResponse>
     suspend fun saveBlog(userId: String, blogId: String): SavedBlog
     suspend fun getSavedBlogs(userId: String, page: Int, size: Int): Pair<List<Blog>, Int>
+    suspend fun getBlogById(blogId: String): Blog?
 }

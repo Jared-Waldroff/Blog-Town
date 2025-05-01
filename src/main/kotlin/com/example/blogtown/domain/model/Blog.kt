@@ -31,6 +31,15 @@ data class BlogSearchRequest(
 
 @Serializable
 data class BlogSearchResponse(
+    val id: String,
     val title: String,
-    val description: String
+    val description: String,
+    val author: String,
+    val tags: List<String> = emptyList(),
+    val dateCreated: Long
+)
+
+@Serializable
+data class BlogSearchResponseList(
+    val blogs: List<BlogSearchResponse>
 )

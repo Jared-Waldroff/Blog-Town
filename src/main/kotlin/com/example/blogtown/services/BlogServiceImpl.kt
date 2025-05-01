@@ -5,12 +5,14 @@ import com.example.com.example.blogtown.domain.repository.BlogRepository
 import com.example.com.example.blogtown.domain.repository.SavedBlogRepository
 import com.example.com.example.blogtown.domain.repository.UserRepository
 import com.example.com.example.blogtown.domain.service.BlogService
+import org.slf4j.LoggerFactory
 
 class BlogServiceImpl(
     private val blogRepository: BlogRepository,
     private val savedBlogRepository: SavedBlogRepository,
     private val userRepository: UserRepository
 ) : BlogService {
+    private val logger = LoggerFactory.getLogger(BlogServiceImpl::class.java)
 
     override suspend fun createBlogPost(userId: String, request: BlogCreateRequest): Blog {
         // Verify current user exists
@@ -32,10 +34,13 @@ class BlogServiceImpl(
             author = userId
         )
 
+        logger.info("Creating new blog post for user $userId: ${request.title}")
         return blogRepository.createBlog(blog)
     }
 
     override suspend fun searchBlogs(request: BlogSearchRequest): List<BlogSearchResponse> {
+        logger.info("Searching blogs with criteria: $request")
+
         val keyword = request.keywords
         val tag = request.tags?.firstOrNull()
 
@@ -44,7 +49,10 @@ class BlogServiceImpl(
         return blogs.map { blog ->
             BlogSearchResponse(
                 title = blog.title,
-                description = blog.description
+                description = blog.description,
+                author = blog.author,
+                dateCreated = blog.dateCreated,
+                id = blog.id
             )
         }
     }
@@ -69,11 +77,15 @@ class BlogServiceImpl(
             blogId = blogId
         )
 
+        logger.info("User $userId saving blog $blogId")
+
         // Persist saved blog
         return savedBlogRepository.saveBlog(savedBlog)
     }
 
     override suspend fun getSavedBlogs(userId: String, page: Int, size: Int): Pair<List<Blog>, Int> {
+        logger.info("Fetching saved blogs for user $userId (page: $page, size: $size)")
+
         // Get saved blog references
         val (savedBlogs, totalPages) = savedBlogRepository.getSavedBlogsByUserId(userId, page, size)
 
@@ -83,5 +95,11 @@ class BlogServiceImpl(
         }
 
         return Pair(blogs, totalPages)
+    }
+
+    override suspend fun getBlogById(blogId: String): Blog? {
+        logger.info("Fetching blog with ID: $blogId")
+
+        return blogRepository.getBlogById(blogId)
     }
 }
