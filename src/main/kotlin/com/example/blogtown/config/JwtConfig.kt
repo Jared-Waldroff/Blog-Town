@@ -12,7 +12,7 @@ class JwtConfig(config: ApplicationConfig) {
     private val issuer: String = config.property("jwt.issuer").getString()
     private val audience: String = config.property("jwt.audience").getString()
 
-    private val accessTokenExpiration: Long = config.property("jwt.accessTokenExpiration").getString().toLong()
+    val accessTokenExpiration: Long = config.property("jwt.accessTokenExpiration").getString().toLong()
     private val refreshTokenExpiration: Long = config.property("jwt.refreshTokenExpiration").getString().toLong()
 
     val realm: String = config.property("jwt.realm").getString()
