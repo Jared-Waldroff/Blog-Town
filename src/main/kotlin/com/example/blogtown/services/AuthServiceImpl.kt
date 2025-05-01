@@ -7,13 +7,23 @@ import com.example.com.example.blogtown.domain.model.User
 import com.example.com.example.blogtown.domain.model.UserCreationRequest
 import com.example.com.example.blogtown.domain.repository.UserRepository
 import com.example.com.example.blogtown.domain.service.AuthService
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.mindrot.jbcrypt.BCrypt
+import org.slf4j.LoggerFactory
 
 class AuthServiceImpl(private val userRepository: UserRepository) : AuthService, KoinComponent {
     private val jwtConfig: JwtConfig by inject()
+    private val httpClient: HttpClient by inject()
+    private val logger = LoggerFactory.getLogger((AuthServiceImpl::class.java))
 
     override suspend fun createUser(request: UserCreationRequest): User {
         userRepository.getUserByEmail(request.email)?.let {
@@ -26,7 +36,8 @@ class AuthServiceImpl(private val userRepository: UserRepository) : AuthService,
         val user = User(
             email = request.email,
             username = request.username,
-            password = hashedPassword
+            password = hashedPassword,
+            oauthProvider = provider
         )
 
         return userRepository.createUser(user)
@@ -37,18 +48,8 @@ class AuthServiceImpl(private val userRepository: UserRepository) : AuthService,
 
         // Find user by email or username
         val userByEmail = if (request.email.isNotBlank()) userRepository.getUserByEmail(request.email) else null
-        println("User found by email: $userByEmail")
-
         val userByUsername = if (request.username.isNotBlank()) userRepository.getUserByUsername(request.username) else null
-        println("User found by username: $userByUsername")
-
         val user = userByEmail ?: userByUsername ?: throw IllegalArgumentException("Invalid username or password")
-
-//        val user = when {
-//            request.email.isNotBlank() -> userRepository.getUserByEmail(request.email)
-//            request.username.isNotBlank() -> userRepository.getUserByUsername(request.username)
-//            else -> null
-//        } ?: throw IllegalArgumentException("Invalid username or password")
 
         // Verify Password with encryption
         if (!BCrypt.checkpw(request.password, user.password)) {
@@ -62,7 +63,10 @@ class AuthServiceImpl(private val userRepository: UserRepository) : AuthService,
         // Store refresh token
         userRepository.storeRefreshToken(user.id, refreshToken)
 
-        return TokenResponse(accessToken, refreshToken)
+        return TokenResponse(
+            accessToken,
+            refreshToken,
+            expiresIn = jwtConfig.accessTokenExpiration)
     }
 
     override suspend fun validateToken(credential: JWTCredential): JWTPrincipal? {
@@ -88,6 +92,123 @@ class AuthServiceImpl(private val userRepository: UserRepository) : AuthService,
         userRepository.invalidateRefreshToken(userId)
         userRepository.storeRefreshToken(userId, newRefreshToken)
 
-        return TokenResponse(newAccessToken, newRefreshToken)
+        return TokenResponse(
+            newAccessToken,
+            newRefreshToken,
+            expiresIn = jwtConfig.accessTokenExpiration)
+    }
+
+    override suspend fun handleOAuthLogin(principal: OAuthAccessTokenResponse): TokenResponse {
+        logger.info("Processing OAuth Login")
+
+        // Extract provider from principal
+        val provider = when (principal) {
+            is OAuthAccessTokenResponse.OAuth2 ->
+                principal.extraParameters["provider"] ?: throw IllegalArgumentException("Unknown OAuth provider")
+            else -> throw IllegalArgumentException("Unsupported OAuth response type")
+        }
+
+        // Get user info from provider using access token
+        val userInfo = when (provider) {
+            "google" -> getUserInfoFromGoogle(principal.accessToken)
+            "github" -> getUserInfoFromGithub(principal.accessToken)
+            else -> throw IllegalArgumentException("Unsupported Provider: $provider")
+        }
+
+        // Create or update user
+        val user = createOrUpdateOAuthUser(
+            provider = provider,
+            id = userInfo.first,
+            email = userInfo.second,
+            displayName = userInfo.third
+        )
+
+        // Generate JWT tokens
+        val accessToken = jwtConfig.generateAccessToken(user.id)
+        val refreshToken = jwtConfig.generateRefreshToken(user.id)
+
+        // Store refresh tokens
+        userRepository.storeRefreshToken(user.id, refreshToken)
+
+        return TokenResponse(
+            accessToken = accessToken,
+            refreshToken = refreshToken,
+            expiresIn = jwtConfig.accessTokenExpiration
+        )
+
+    }
+
+    override suspend fun createOAuthUser(
+        provider: String,
+        id: String,
+        email: String,
+        displayName: String
+    ): User {
+        val existingUser = userRepository.getUserByOAuth(provider, id)
+
+        if (existingUser != null) {
+            return existingUser
+        }
+
+        // Create new user
+        // Why are we generating a unique username?
+        val username = generateUniqueUsername(displayName)
+        val newUser = User(
+            email = email,
+            username = username,
+            oauthProvider = provider,
+            oauthId = id
+        )
+
+        return userRepository.createUser(newUser)
+    }
+
+    // Helper methods for OAuth providers
+    private suspend fun getUserInfoFromGoogle(accessToken: String): Triple<String, String, String> {
+        val userInfo = httpClient.get("https://api.github.com/user") {
+            headers {
+                append(HttpHeaders.Authorization, "Bearer $accessToken")
+                append(HttpHeaders.Accept, "application/json")
+            }
+        }.body<JsonObject>()
+
+        val id = userInfo["id"]?.jsonPrimitive?.content ?: ""
+        val email = userInfo["email"]?.jsonPrimitive?.content ?: ""
+        val name = userInfo["name"]?.jsonPrimitive?.content
+            ?: userInfo["login"]?.jsonPrimitive?.content
+            ?: ""
+
+        return Triple(id, email, name)
+    }
+
+    private suspend fun getUserInfoFromGithub(accessToken: String): Triple<String, String, String> {
+        val userInfo = httpClient.get("https://www.googleapis.com/oauth2/v2/userinfo"){
+        headers {
+            append(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+    }.body<JsonObject>()
+
+        val id = userInfo["id"]?.jsonPrimitive?.content ?: ""
+        val email = userInfo["email"]?.jsonPrimitive?.content ?: ""
+        val name = userInfo["name"]?.jsonPrimitive?.content ?: ""
+
+        return Triple(id, email, name)
+    }
+
+    // Generate a unique username
+    private suspend fun generateUniqueUsername(name: String): String {
+        val baseUserName = name.lowercase()
+            .replace(Regex("[^a-z0-9]"), "")
+            .take(20)
+
+        var username = baseUserName
+        var counter = 1
+
+        while (userRepository.getUserByUsername(username) != null) {
+            username = "$baseUserName$counter"
+            counter++
+        }
+
+        return username
     }
 }
