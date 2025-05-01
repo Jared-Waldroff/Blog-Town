@@ -1,34 +1,45 @@
 package com.example
 
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.plugins.calllogging.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.response.*
-import kotlinx.serialization.json.Json
-import org.slf4j.event.Level
 import com.example.com.example.blogtown.config.JwtConfig
-import com.example.com.example.blogtown.di.appModule
+import com.example.com.example.blogtown.di.*
 import com.example.com.example.blogtown.domain.service.AuthService
 import com.example.com.example.blogtown.web.plugins.*
+import com.example.com.example.blogtown.web.routes.configureAuthRoutes
+import com.example.com.example.blogtown.web.routes.configureBlogRoutes
+import com.example.com.example.blogtown.web.routes.configureUserRoutes
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import org.koin.ktor.plugin.Koin
+import io.ktor.server.plugins.contentnegotiation.*
+import kotlinx.serialization.json.Json
 import org.koin.ktor.ext.inject
-import com.example.com.example.blogtown.web.routes.configureAuthRoutes
+import org.koin.ktor.plugin.Koin
+import org.slf4j.LoggerFactory
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
 fun Application.module() {
-    configureSerialization()
-    configureHTTP()
-    configureMonitoring()
+    val logger = LoggerFactory.getLogger(this::class.java)
 
-    val jwtConfig = JwtConfig(environment.config)
+    // JSON Serialization
+    install(ContentNegotiation) {
+        json(Json {
+            prettyPrint = true
+            isLenient = true
+        })
+    }
+
+    // Koin dependency injection
+    install(Koin) {
+        logger.info("Initializing Koin dependency injection")
+        modules(appModule, createConfigModule(this@module), repositoryModule, serviceModule)
+    }
+
+    // Get dependencies from Koin
+    val jwtConfig by inject<JwtConfig>()
     val authService by inject<AuthService>()
 
     install(Authentication) {
@@ -42,19 +53,13 @@ fun Application.module() {
     }
 
     configureRouting()
+    configureSerialization()
+    configureHTTP()
+    configureMonitoring()
+
     configureAuthRoutes()
+    configureBlogRoutes()
+    configureUserRoutes()
 
-
-    // JSON Serialization
-    install(ContentNegotiation) {
-        json(Json {
-            prettyPrint = true
-            isLenient = true
-        })
-    }
-
-    // Koin dependency injection
-    install(Koin) {
-        modules(appModule)
-    }
+    logger.info("Application started successfully")
 }
