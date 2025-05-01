@@ -13,10 +13,7 @@ A stateless blogging backend written in Kotlin + Ktor and designed for cloud-nat
   - Routes → Services → Repositories (interface-backed)  
   - Dependency Injection via **Koin**  
 - **Coroutine-based non-blocking I/O** – handles thousands of concurrent requests with minimal threads  
-- **OpenAPI / Swagger UI** auto-generated  
-- **Unit-tested** (JUnit5 + MockK) – > 90 % coverage  
 - **Container-ready**: multi-stage Dockerfile, liveness/readiness probes, Helm-friendly manifests  
-- **CI pipeline**: GitHub Actions builds, tests, and pushes images to GHCR
 
 ---
 
@@ -24,7 +21,6 @@ A stateless blogging backend written in Kotlin + Ktor and designed for cloud-nat
 * **JDK 17 +**
 * Gradle Wrapper (bundled)
 * Docker 24 + (for container run)
-* Minikube (optional, for local K8s test)
 
 ---
 
@@ -46,13 +42,6 @@ docker build -t blog-town:latest .
 docker run -p 8080:8080 blog-town:latest
 ```
 
-### 4 · Deploy on Minikube
-```bash
-minikube start
-kubectl apply -f k8s/
-minikube service blog-town-svc --url
-```
-
 ----
 
 ## REST Endpoints
@@ -67,7 +56,6 @@ minikube service blog-town-svc --url
 | POST   | /blogs/{id}/save   | ✅    | Bookmark post                             |
 | GET    | /users/{uid}/saved | ✅    | List bookmarks                            |
 
-Full Swagger UI available at **`/openapi`**.
 
 ---
 
@@ -76,5 +64,4 @@ Full Swagger UI available at **`/openapi`**.
 - **Stateless API** – only tokens are persisted (currently in-memory; easily swapped for DB/Redis).  
 - **Interface-backed layers** – swap mocks for real persistence without touching business logic.  
 - **Coroutines** – non-blocking I/O keeps threads free, enabling high concurrency.  
-- **CI/CD** – GitHub Actions pipeline builds, tests, and pushes the Docker image to GHCR.
 

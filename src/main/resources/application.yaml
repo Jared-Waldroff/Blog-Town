@@ -11,3 +11,6 @@ jwt:
   realm: "ktor sample app"
   accessTokenExpiration: 900000
   refreshTokenExpiration: 604800000
+
+oauth:
+  redirectUrl: "heep"
