@@ -25,7 +25,7 @@ class UserRepositoryImpl : UserRepository {
     }
 
     override suspend fun getUserByUsername(username: String): User? {
-        return users[username]
+        return usersByUsername[username]
     }
 
     override suspend fun storeRefreshToken(userId: String, token: String) {
