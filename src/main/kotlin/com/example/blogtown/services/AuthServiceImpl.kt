@@ -33,12 +33,22 @@ class AuthServiceImpl(private val userRepository: UserRepository) : AuthService,
     }
 
     override suspend fun loginUser(request: LoginRequest): TokenResponse {
+        println("Login attempt with username: ${request.username}, email: ${request.email}")
+
         // Find user by email or username
-        val user = when {
-            request.email.isNotBlank() -> userRepository.getUserByEmail(request.email)
-            request.username.isNotBlank() -> userRepository.getUserByUsername(request.username)
-            else -> null
-        } ?: throw IllegalArgumentException("Invalid username or password")
+        val userByEmail = if (request.email.isNotBlank()) userRepository.getUserByEmail(request.email) else null
+        println("User found by email: $userByEmail")
+
+        val userByUsername = if (request.username.isNotBlank()) userRepository.getUserByUsername(request.username) else null
+        println("User found by username: $userByUsername")
+
+        val user = userByEmail ?: userByUsername ?: throw IllegalArgumentException("Invalid username or password")
+
+//        val user = when {
+//            request.email.isNotBlank() -> userRepository.getUserByEmail(request.email)
+//            request.username.isNotBlank() -> userRepository.getUserByUsername(request.username)
+//            else -> null
+//        } ?: throw IllegalArgumentException("Invalid username or password")
 
         // Verify Password with encryption
         if (!BCrypt.checkpw(request.password, user.password)) {
