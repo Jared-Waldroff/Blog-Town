@@ -10,8 +10,6 @@ data class User(
     val username: String,
     val password: String,
     val timeCreated: Long = System.currentTimeMillis(),
-    val oauthProvider: String,
-    val oauthId: String
 )
 
 @Serializable

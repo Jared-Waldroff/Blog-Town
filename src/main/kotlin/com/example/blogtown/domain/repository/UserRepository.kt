@@ -10,5 +10,4 @@ interface UserRepository {
     suspend fun validateRefreshToken(userId: String, token: String): Boolean
     suspend fun invalidateRefreshToken(userId: String)
     suspend fun getUserByUsername(username: String): User?
-    suspend fun getUserByOAuth(provider: String, oauthId: String): User?
 }

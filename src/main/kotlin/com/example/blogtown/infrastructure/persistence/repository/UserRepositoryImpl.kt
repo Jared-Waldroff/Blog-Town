@@ -42,7 +42,4 @@ class UserRepositoryImpl : UserRepository {
         return refreshTokens[userId] == token
     }
 
-    override suspend fun getUserByOAuth(provider: String, oauthId: String): User? {
-        return usersByOAuth[Pair(provider, oauthId)]
-    }
 }
