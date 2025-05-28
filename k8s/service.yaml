@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: blog-town-api-service
+  labels:
+    app: blog-town-api
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: blog-town-api
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: blog-town-api-ingress
+  labels:
+    app: blog-town-api
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: blog-town-api.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: blog-town-api-service
+                port:
+                  number: 80
+  # Uncomment for HTTPS
+  # tls:
+  # - hosts:
+  #   - blog-town-api.local
+  #   secretName: blog-town-api-tls

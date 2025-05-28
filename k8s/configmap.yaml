@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: blog-town-config
+  labels:
+    app: blog-town-api
+data:
+  # JWT Configuration
+  jwt.secret: "your-jwt-secret-key-change-in-production"
+  jwt.issuer: "https://blog-town-api/"
+  jwt.audience: "blog-town-users"
+  jwt.realm: "blog-town-api"
+  jwt.accessTokenExpiration: "900000"
+  jwt.refreshTokenExpiration: "604800000"
+
+  # OAuth Configuration
+  oauth.redirectUrl: "http://blog-town-api.local/oauth/callback"
+
+  # Application Configuration
+  application.yaml: |
+    ktor:
+      application:
+        modules:
+          - com.example.ApplicationKt.module
+      deployment:
+        port: 8080
+    jwt:
+      secret: ${JWT_SECRET}
+      issuer: ${JWT_ISSUER}
+      audience: ${JWT_AUDIENCE}
+      realm: ${JWT_REALM}
+      accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
+      refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
+    oauth:
+      redirectUrl: ${OAUTH_REDIRECT_URL}
+      providers:
+        google:
+          clientId: ${GOOGLE_CLIENT_ID}
+          clientSecret: ${GOOGLE_CLIENT_SECRET}
+        github:
+          clientId: ${GITHUB_CLIENT_ID}
+          clientSecret: ${GITHUB_CLIENT_SECRET}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: blog-town-secrets
+  labels:
+    app: blog-town-api
+type: Opaque
+data:
+  # OAuth Secrets (base64 encoded - replace with actual values)
+  # Leave empty for now, add your actual OAuth credentials later
+  google.client.id: ""
+  google.client.secret: ""
+  github.client.id: ""
+  github.client.secret: ""
