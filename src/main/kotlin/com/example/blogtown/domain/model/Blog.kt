@@ -9,7 +9,7 @@ data class Blog(
     val title: String,
     val description: String,
     val body: String,
-    val tags: Any,
+    val tags: String,
     val author: String,
     val dateCreated: Long = System.currentTimeMillis()
 )

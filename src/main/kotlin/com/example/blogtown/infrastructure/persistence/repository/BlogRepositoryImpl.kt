@@ -21,15 +21,15 @@ class BlogRepositoryImpl : BlogRepository {
         // Apply keyword filter
         if (!keyword.isNullOrBlank()) {
             filteredBlogs = filteredBlogs.filter {
-                it.title.contains(keyword, ignoreCase = true)
-                it.body.contains(keyword, ignoreCase = true)
+                it.title.contains(keyword, ignoreCase = true) ||
+                        it.body.contains(keyword, ignoreCase = true)
             }
         }
 
         // Apply tag filter
         if (!tag.isNullOrBlank()) {
             filteredBlogs = filteredBlogs.filter {
-                it.tags.any { t -> t.equals(tag, ignoreCase = true)}
+                it.tags.any { t -> t.lowercase() == tag.lowercase() }
             }
         }
 
@@ -39,11 +39,11 @@ class BlogRepositoryImpl : BlogRepository {
         val totalCount = sortedBlogs.size
         val totalPages = (totalCount + size - 1) / size
 
-        sortedBlogs
+        val paginatedBlogs = sortedBlogs
             .drop(page * size)
             .take(size)
 
-        return Pair(sortedBlogs, totalPages)
+        return Pair(paginatedBlogs, totalPages)
     }
 
     override suspend fun updateBlog(blogId: String, userId: String, blog: Blog): Blog? {
