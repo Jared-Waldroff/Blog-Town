@@ -1,0 +1,120 @@
+# Default values for blog-town-api
+replicaCount: 3
+
+image:
+  repository: blog-town
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  hosts:
+    - host: blog-town-api.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Health check configuration
+healthCheck:
+  enabled: true
+  livenessProbe:
+    httpGet:
+      path: /health/live
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health/ready
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  startupProbe:
+    httpGet:
+      path: /health/startup
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 30
+
+# Application configuration
+config:
+  jwt:
+    secret: "your-jwt-secret-key-change-in-production"
+    issuer: "https://blog-town-api/"
+    audience: "blog-town-users"
+    realm: "blog-town-api"
+    accessTokenExpiration: "900000"
+    refreshTokenExpiration: "604800000"
+  oauth:
+    redirectUrl: "http://blog-town-api.local/oauth/callback"
+
+# OAuth secrets (should be set via helm install --set)
+secrets:
+  google:
+    clientId: ""
+    clientSecret: ""
+  github:
+    clientId: ""
+    clientSecret: ""
+
+# Environment-specific overrides
+env: "development"
+
+# Enable monitoring and observability
+monitoring:
+  enabled: false
+  serviceMonitor:
+    enabled: false
+    namespace: monitoring
+    interval: 30s

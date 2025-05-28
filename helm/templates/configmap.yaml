@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "blog-town-api.fullname" . }}-config
+  labels:
+    {{- include "blog-town-api.labels" . | nindent 4 }}
+data:
+  # JWT Configuration
+  jwt.secret: {{ .Values.config.jwt.secret | quote }}
+  jwt.issuer: {{ .Values.config.jwt.issuer | quote }}
+  jwt.audience: {{ .Values.config.jwt.audience | quote }}
+  jwt.realm: {{ .Values.config.jwt.realm | quote }}
+  jwt.accessTokenExpiration: {{ .Values.config.jwt.accessTokenExpiration | quote }}
+  jwt.refreshTokenExpiration: {{ .Values.config.jwt.refreshTokenExpiration | quote }}
+
+  # OAuth Configuration
+  oauth.redirectUrl: {{ .Values.config.oauth.redirectUrl | quote }}
+
+  # Application Configuration
+  application.yaml: |
+    ktor:
+      application:
+        modules:
+          - com.example.ApplicationKt.module
+      deployment:
+        port: {{ .Values.service.targetPort }}
+    jwt:
+      secret: ${JWT_SECRET}
+      issuer: ${JWT_ISSUER}
+      audience: ${JWT_AUDIENCE}
+      realm: ${JWT_REALM}
+      accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
+      refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
+    oauth:
+      redirectUrl: ${OAUTH_REDIRECT_URL}
+      providers:
+        google:
+          clientId: ${GOOGLE_CLIENT_ID}
+          clientSecret: ${GOOGLE_CLIENT_SECRET}
+        github:
+          clientId: ${GITHUB_CLIENT_ID}
+          clientSecret: ${GITHUB_CLIENT_SECRET}
+---
+  {{- if or .Values.secrets.google.clientId .Values.secrets.github.clientId }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "blog-town-api.fullname" . }}-secrets
+  labels:
+    {{- include "blog-town-api.labels" . | nindent 4 }}
+type: Opaque
+data:
+  {{- if .Values.secrets.google.clientId }}
+  google.client.id: {{ .Values.secrets.google.clientId | b64enc }}
+  google.client.secret: {{ .Values.secrets.google.clientSecret | b64enc }}
+  {{- end }}
+  {{- if .Values.secrets.github.clientId }}
+  github.client.id: {{ .Values.secrets.github.clientId | b64enc }}
+  github.client.secret: {{ .Values.secrets.github.clientSecret | b64enc }}
+  {{- end }}
+  {{- end }}
