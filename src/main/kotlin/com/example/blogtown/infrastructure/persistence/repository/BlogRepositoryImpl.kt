@@ -45,4 +45,17 @@ class BlogRepositoryImpl : BlogRepository {
 
         return Pair(sortedBlogs, totalPages)
     }
+
+    override suspend fun updateBlog(blogId: String, userId: String, blog: Blog): Blog? {
+        val existingBlog = blogs[blogId]
+
+        // Check if blog exists and user owns it
+        if (existingBlog == null || existingBlog.author != userId) {
+            return null
+        }
+
+        // Update blog
+        blogs[blogId] = blog.copy(id = blogId)
+        return blogs[blogId]
+    }
 }

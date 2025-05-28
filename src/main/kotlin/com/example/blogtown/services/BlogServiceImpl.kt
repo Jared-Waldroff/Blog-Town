@@ -102,4 +102,40 @@ class BlogServiceImpl(
 
         return blogRepository.getBlogById(blogId)
     }
+
+    override suspend fun updateBlogPost(userId: String?, blogId: String, request: BlogUpdateRequest): Blog {
+        if (userId.isNullOrBlank()) {
+            throw IllegalArgumentException ("User ID is required")
+        }
+
+        // Get existing blog
+        val existingBlog = blogRepository.getBlogById(blogId)
+            ?: throw IllegalArgumentException ("Blog not found")
+
+        // Check if user owns the blog
+        if (existingBlog.author != userId) {
+            throw IllegalArgumentException("You can only update your own blogs")
+        }
+
+        // Create updated blog with only changed fields
+        val updatedBlog = existingBlog.copy(
+            title = request.title ?: existingBlog.title,
+            body = request.body ?: existingBlog.body,
+            tags = request.tags ?: existingBlog.tags,
+            description = if (request.body != null) {
+                if (request.body.length > 100) {
+                    request.body.substring(0, 100) + "..."
+                } else {
+                    request.body
+                }
+            } else {
+                existingBlog.description
+            }
+        )
+
+        logger.info("Updating blog post $blogId for user $userId")
+
+        return blogRepository.updateBlog(blogId, userId, updatedBlog)
+            ?: throw IllegalArgumentException("Failed to update blog")
+    }
 }

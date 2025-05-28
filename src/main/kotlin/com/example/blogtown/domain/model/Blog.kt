@@ -9,7 +9,7 @@ data class Blog(
     val title: String,
     val description: String,
     val body: String,
-    val tags: List<String>,
+    val tags: Any,
     val author: String,
     val dateCreated: Long = System.currentTimeMillis()
 )
@@ -42,4 +42,11 @@ data class BlogSearchResponse(
 @Serializable
 data class BlogSearchResponseList(
     val blogs: List<BlogSearchResponse>
+)
+
+@Serializable
+data class BlogUpdateRequest(
+    val title: String? = null,
+    val body: String? = null,
+    val tags: List<String>? = null
 )

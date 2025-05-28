@@ -112,6 +112,24 @@ fun Application.configureBlogRoutes() {
                     call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to retrieve saved blogs: ${e.message}"))
                 }
             }
+
+            // Update existing blog post
+            put("/blogs/{blogId}") {
+                try {
+                    val principal = call.principal<JWTPrincipal>()
+                    val userId = principal?.payload?.getClaim("userId")?.asString()
+                    val blogId = call.parameters["blogId"] ?: throw IllegalArgumentException("Blog ID is required")
+
+                    val request = call.receive<BlogUpdateRequest>()
+                    val updatedBlog = blogService.updateBlogPost(userId, blogId, request)
+                    call.respond(HttpStatusCode.OK, updatedBlog)
+                } catch (e: IllegalArgumentException) {
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to e.message))
+                } catch (e: Exception) {
+                    logger.error("Error updating blog post", e)
+                    call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to update blog post: ${e.message}"))
+                }
+            }
         }
     }
 }
