@@ -6,6 +6,7 @@ import com.example.com.example.blogtown.domain.service.AuthService
 import com.example.com.example.blogtown.web.plugins.*
 import com.example.com.example.blogtown.web.routes.configureAuthRoutes
 import com.example.com.example.blogtown.web.routes.configureBlogRoutes
+import com.example.com.example.blogtown.web.routes.configureHealthRoutes
 // import com.example.com.example.blogtown.web.routes.configureOAuthRoutes
 import com.example.com.example.blogtown.web.routes.configureUserRoutes
 import io.ktor.serialization.kotlinx.json.*
@@ -109,6 +110,7 @@ fun Application.module() {
     configureAuthRoutes()
     configureBlogRoutes()
     configureUserRoutes()
+    configureHealthRoutes()
 
     logger.info("Application started successfully")
 }
